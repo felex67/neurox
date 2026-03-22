@@ -159,14 +159,15 @@ Apache License 2.0 — код открыт для изучения.
 
 ## Технологии
 
-* **Ядро/нейросеть:** C (GCC, POSIX).
-* **Сервер:** PHP 8.3+ + CodeIgniter.
+* **Ядро/нейросеть:** C17 (GCC, POSIX.1).
+* **Сервер:** NGINX + PHP 8.3+ + CodeIgniter.
 * **Десктоп‑клиент:** C++17 + SFML 2.5.
 * **Android‑клиент:** Kotlin + Android NDK.
 * **Сеть:** TCP/IP, Unix‑сокеты (Web ↔ TCP/IP Сервер ↔ Ядро).
 * **Шифрование:** RSA 2048 бит, XOR с динамическим ключом.
 * **БД:** MySQL 8.0+.
 * **Инструменты:** Git, CMake, Makefile.
+* **IDE:** VS Code(Linux), VisualStudio(Windows).
 
 ## Лицензия
 Apache License 2.0 — код открыт для изучения.
