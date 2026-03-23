@@ -120,7 +120,7 @@ Apache License 2.0 — код открыт для изучения.
 
 ## Контакты
 * GitHub: [@felex67](https://github.com/felex67)
-* Email: ваш_email@example.com
+* Email: <a href="mailto:admin@felexdev.ru">admin@felexdev.ru</a>, <a href="mailto:felexxx67@yandex.ru">felexxx67@yandex.ru</a>
 
 ---
 
