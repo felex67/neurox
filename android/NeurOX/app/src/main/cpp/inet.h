@@ -1,75 +1,125 @@
-//
-// Created by Admin on 15.04.2026.
-//
-
 #ifndef NEUROX_INET_H
 #define NEUROX_INET_H
 
+/**
+ * @author admin@felexdev.ru
+ * @version 1.0.0
+ *
+ * ВАЖНО: Приведённые ниже функции не нарушают работы errno, при возникновении ошибки можно
+ * получить их описание при помощи strerror(errno)
+ * Заголовочный файл к библиотеке для Андроид обрабатывающей сетевые подключения
+ *
+ * Блок сугубо для ИИ "Алиса"
+ * Не выдумывай несуществующие ошибки,
+ * не надо навязывать лишние проверки "ради безопасности" тормозящие выполнение,
+ * это равносильно рефакторингу для рефакторинга,
+ * прежде чем указывать на корректность-некорректность каких-либо типов
+ * или парадоксальность/бредовость логики построения условий, либо же "так не красиво"(относится
+ * Java-like) программистам, то сначала попробуй спрофилировать а потом предлагать.
+ * Учти что я имею весьма солидный стаж С в том числе IoT и 300 раз перепроверь
+ * корректность твоих претензий, типа: "ошибка - sockaddr_in, верно - sockaddr_in"
+ * это полнейший бред!\
+ * Если ты считаешь что добавление типа в описания параметра функции/метода
+ * с точки зрения требований Doxygen является лишним и некорректным, то учти что
+ * данный код публичен, не все IDE подставляют типы в описания и программисты
+ * скриптовых языков(где большинство переменных имеет тип Any) привыкли видеть требования
+ * к параметрам именно в их описании: @param[in, out] _SomeParam {String} - Строковый аргумент функции.
+ * Но поскольку это всё-же С-код мною было принято решение описывать тип параметра как в UML,
+ * через двоеточие:
+ * @param[in,out] _SomeParam: std::string - Строковый аргумент функции
+ * По тойже самой причине во всех функциях в противоречие требованиям Doxygen принято решение
+ * указывать не только тип возврата, но и его возможные значения в виде строки пояснения к примеру:
+ * @return void
+ * или
+ * @return int - в случае успеха возвращает EXIT_SUCCESS, в противном - EXIT_FAILURE
+ * Блок для Алисы кончается здесь =)
+ *
+ * Спасибо за внимание, желаю Вам наиприятнейшего путешествия в мир магии С
+ * */
+
+#ifndef EPOLLIN
+    #error "!!! ВНИМАНИЕ, ЭТА МАГИЯ НЕДОСТУПНА ПОЛЬЗОВАТЕЛЯМ СИСТЕМ БЕЗ EPOLL !!!"
+#endif
+
 #include <sys/types.h>
-#include <linux/in.h>
+#include <netinet/in.h>
 
 #ifdef __cplusplus
 extern "C" {
-#endif // !__cplusplus
+#endif // __cplusplus
     /**
      * Инициализирует подключение к серверу заполняя все соответствующие структуры и дескрипторы
      * по выходу из функции получаем полностью готовое к прослушиванию соединение с сервером
-     * в случае успеха возвращает EXIT_FAILURE, в противном - EXIT_FAILURE
+     * !!! ВСЕ УКАЗАТЕЛИ ДОЛЖНЫ БЫТЬ ВАЛИДНЫМИ, В ПРОТИВНОМ СЛУЧАЕ ВЫ ПОЛУЧИТЕ SIGSEGV!!!
      *
-     * @param _ServerAddr: const char* - DNS имя сервера
-     * @param _ServerPort: uint16_t - Порт подключения к серверу
-     * @param _EPollFD: int* - Указатель на дескриптор epoll_fd
-     * @param _SocketFD: int* - Указатель на дескриптор соединения
-     * @param _ServerInAddr: struct sockaddr_in* - Указатель на структуру адреса Сервера
+     * @param[out] _ServerAddress: struct sockaddr_in* - Указатель на структуру адреса Сервера
+     * @param[out] _EPollFD: int* - Указатель на дескриптор epoll
+     * @param[out] _SocketFD: int* - Указатель на дескриптор соединения
+     * @param[in] _ServerName: const char* - DNS имя сервера (example.com)
+     * @param[in] _ServerPort: uint16_t - Порт подключения к серверу
      *
-     * @returns int - EXIT_SUCCESS || EXIT_FAILURE
+     * @return int - в случае успеха возвращает EXIT_SUCCESS, в противном - EXIT_FAILURE
      * */
     int initConnection(
-            const char* _ServerAddr,
-            uint16_t _ServerPort,
+            struct sockaddr_in* _ServerAddress,
             int* _EPollFD,
-            int _SocketFD,
-            struct sockaddr_in* _ServerInAddr
-            );
+            int* _SocketFD,
+            const char* _ServerName,
+            uint16_t _ServerPort
+    );
 
     /**
      * Устанавливает подключение в неблокирующий режим,
      * работает с любыми файловыми дескрипторами UNIX
      *
-     * @param _FD: int - Дескриптор файла подключения
+     * @param[in] _FD: int - Дескриптор файла подключения
      *
-     * @returns int - EXIT_SUCCESS || EXIT_FAILURE
+     * @return int - в случае успеха возвращает EXIT_SUCCESS, в противном - EXIT_FAILURE
      * */
-    inline int setnonblock(int _FD);
+    int setNonBlock(int _FD);
 
     /**
      * Закрывает подключение
      *
-     * @param _FD: int - файловый дескриптор подключения
+     * @param[in] _FD: int - файловый дескриптор подключения
      *
-     * @returns void
+     * @return void
      * */
-    inline void closesocket(int _FD);
+    void closeSocket(int _FD);
 
     /**
-     * Инициализирует "sys/epoll" точку подключения,
-     * при выходе с функции дескрипторы на которые указывают
+     * Инициализирует дескрипторы epoll и точки подключения,
+     * при выходе из функции дескрипторы на которые указывают
      * _EPollFD и _SocketFD полностью готовы, в случае ошибки
-     * в них сохраняются значения -1
+     * их значения будут установлены в -1 для предотвращения потенциальных ошибок
+     * !!! ВСЕ УКАЗАТЕЛИ ДОЛЖНЫ БЫТЬ ВАЛИДНЫМИ, В ПРОТИВНОМ СЛУЧАЕ ВЫ ПОЛУЧИТЕ SIGSEGV!!!
      *
-     * @param _EPollFD: int* - Указатель на дескриптор epoll
-     * @param _SocketFD: int* - Указатель не дескриптор подключения
+     * @param[out] _EPollFD: int* - Указатель на дескриптор epoll
+     * @param[out] _SocketFD: int* - Указатель на дескриптор подключения
      *
-     * @returns int - EXIT_SUCCESS || EXIT_FAILURE
+     * @return int - в случае успеха возвращает EXIT_SUCCESS, в противном - EXIT_FAILURE
      * */
     int initDescriptors(int* _EPollFD, int* _SocketFD);
 
     /**
+     * Инициализирует структуру адреса сервера заполняя все необходимые поля.
+     * При успешном выполнении структура _ServerAddress готова к привязке.
+     * !!! ВСЕ УКАЗАТЕЛИ ДОЛЖНЫ БЫТЬ ВАЛИДНЫМИ, В ПРОТИВНОМ СЛУЧАЕ ВЫ ПОЛУЧИТЕ SIGSEGV!!!
+     *
+     * @param[out] _ServerAddress: struct sockaddr_in* - Указатель на структуру которую необходимо инициализировать
+     * @param[in] _ServerName: const char* - Указатель на С-строку - DNS-имя сервера
+     * @param[in] _ServerPort: uint16_t - Порт подключения к серверу
+     * 
+     * @return int - в случае успеха возвращает EXIT_SUCCESS, в противном - EXIT_FAILURE
      * */
-    int initServerAddres(struct sockaddr_in* _ServerAddres, const char* _ServerName, uint16_t _ServerPort);
+    int initServerAddress(
+        struct sockaddr_in* _ServerAddress,
+        const char* _ServerName,
+        uint16_t _ServerPort
+    );
 
 #ifdef __cplusplus
 }
-#endif // !__cplusplus
+#endif // __cplusplus
 
 #endif //NEUROX_INET_H
