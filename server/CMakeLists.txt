@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.5)
+project(neurox_server)
+set(INCLUDES )
+set(HEADERS )
+set(SOURCES server.c)
+add_executable(server ${INCLUDES} ${HEADERS} ${SOURCES})
+target_include_directories(server PUBLIC includes PRIVATE headers)
