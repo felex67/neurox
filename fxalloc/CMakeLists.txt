@@ -1,0 +1,7 @@
+cmake_minimal_required(VERSION 3.10)
+project(neurox)
+set(SOURCES src/FXAlloc.c)
+set(HEADERS headers/_FXAlloc.h)
+set(INCLUDES includes/FXAlloc.h)
+add_library(fxalloc STATIC ${SOURCES} ${HEADERS} ${INCLUDES})
+target_include_directories(fxalloc PUBLIC includes PRIVATE headers)
