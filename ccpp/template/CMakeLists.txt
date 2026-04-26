@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.10)
+project(neurox)
+set(HEADERS headers/_header.h)
+set(INCLUDES includes/include.h)
+set(SOURCES src/source.c)
+add_library(template SHARED ${INCLUDES} ${HEADERS} ${SOURCES})
+target_include_directories(neurox PUBLIC includes PRIVATE headers)
